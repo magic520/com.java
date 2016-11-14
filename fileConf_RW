@@ -1,0 +1,233 @@
+package com.second.runcodetool;
+
+import java.io.*;
+import java.util.*;
+
+import static com.second.runcodetool.RunCodeTools.list;
+
+/**
+ * Created by hasee on 2016/11/13.
+ */
+public class RunCodeTools {
+
+    public static List list = new ArrayList();
+    public static String strMoudleName;
+
+    public static void main(String[] args) {
+        Ini m = new Ini();
+        m.load("E:/RunCode.ini");
+        // HashMap map = new HashMap();
+//        List<String,HashMap<>> list = new List<String,HashMap<>>() ;
+        //System.out.print(list);
+        // updateDate("模块名"，"模块里面需要修改的值所对应的key"，"新的值")
+        m.updateDate("Global", "DataBaseSize", "4");
+        //get("模块名","模块里面需要查找的值所对应的key")
+        String str = m.get("Global", "DataBaseSize");
+        // System.out.println(str);
+        try {
+            m.save();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+class Ini {
+
+    //存储文件夹地址
+    protected String address = null;
+
+    //map1用来存储模组的属性以及注释
+    //注释：“#”以前的为map1的key  #为map的value
+    //属性：“=”前面的为map1的key “=”以后的为map1的value
+    protected LinkedHashMap map1 = new LinkedHashMap();
+    //map2 它用来存储模组
+    // map2 的key就是模组的name  map2的value就是map1
+    protected LinkedHashMap map2 = new LinkedHashMap();
+//    protected TreeMap map1 = new TreeMap();
+//    protected TreeMap map2 = new TreeMap();
+//    protected HashMap map1 = new HashMap();
+//    protected HashMap map2 = new HashMap();
+
+    public void load(String strAddress) {
+        address = strAddress;
+        String strReader = null;
+        //用流的方式按行读取文件夹
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(strAddress),"GB2312"));
+            while ((strReader = br.readLine()) != null) {
+                parseLine(strReader);
+            }
+            br.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    //按行读取的文件 并进行过滤找到自己想要的数据
+    public void parseLine(String strReaderLine) {
+
+        //trim 去掉字符串首尾的空格
+        strReaderLine = strReaderLine.trim();
+        //判断strReadLine字符串中有没有下面的符号
+        // if(strReaderLine.contains("[")){
+        if (strReaderLine.matches("\\[.*\\]")) {
+            //进行字符串的拆分 除去第一位和最后一位  就会得到模块的名字
+            RunCodeTools.strMoudleName = strReaderLine.substring(1, (strReaderLine.length() - 1));
+            // System.out.println(strMoudleName);
+            //对获取的每一行数据进行判断 如果中间有“=”号
+            // 就对他以等号为分割线进行拆分，例如  “hello=wrold”
+            //拆分后就是 “hello” 和 “world”
+        } else if (strReaderLine.contains("=") || strReaderLine.contains("#") ) {
+            String strDealedLineHead = null;
+            String strDealedLineFoot = null;
+            if(strReaderLine.contains("=")){
+                strDealedLineHead = strReaderLine.substring(0, strReaderLine.indexOf("="));
+                strDealedLineFoot = strReaderLine.substring
+                        (strReaderLine.indexOf("=") + 1, strReaderLine.length());
+                addTomap(strDealedLineHead, strDealedLineFoot, RunCodeTools.strMoudleName);
+            }
+            else if(strReaderLine.contains("#")){
+                strDealedLineFoot = strReaderLine.substring(0, 1);
+                strDealedLineHead = strReaderLine.substring
+                        (0, strReaderLine.length());
+             addTomap(strDealedLineHead, strDealedLineFoot, RunCodeTools.strMoudleName);
+            }
+
+
+        }
+    }
+
+    //将获取到的以键值对的形式数据添加到HashMap中
+    //数据格式 list<map<key:<map<key:value>>>>
+    public void addTomap(String key, String value, String moudleName) {
+
+        map1.put(key, value);
+        //将模块名 作为key map1作为map2的value
+        //将map2添加到list里面
+        map2.put(moudleName, map1);
+        list.add(map2);
+       //
+        // System.out.println(list);
+
+    }
+
+    //修改数据
+    public void updateDate(String strMoudleName, String key, String newValue) {
+        //String str= (String) map2.get(map1.get(list.get(i)));
+        //System.out.println(list.get(i));
+        //判断输入的模块名存不存在
+        if (map2.containsKey(strMoudleName)) {
+            LinkedHashMap map = (LinkedHashMap) map2.get(strMoudleName);
+            //TreeMap map = (TreeMap) map2.get(strMoudleName);
+//            HashMap map = (HashMap) map2.get(strMoudleName);
+            //判断输入的需要进行替换的值对应的key存不存在
+            if (map.containsKey(key)) {
+                // 通过输入的key获取久的值
+                String strEndDate = (String) map.get(key);
+                //进行替换
+                if (map1.replace(key, strEndDate, newValue)) {
+                    System.out.println("修改成功！");
+                    //String strEndDate1 = (String) map.get(key);
+                    //System.out.println(strEndDate1);
+                } else {
+                    System.out.println("修改失败！");
+                }
+            } else {
+                System.out.println("你输入的key值不存在");
+            }
+        } else {
+            System.out.println("你输入的模块名不存在");
+        }
+    }
+
+    //查找数据
+    public String get(String strMoudleName, String key) {
+        String strEndDate = null;
+        if (map2.containsKey(strMoudleName)) {
+            LinkedHashMap map = (LinkedHashMap) map2.get(strMoudleName);
+            //TreeMap map = (TreeMap) map2.get(strMoudleName);
+            //HashMap map = (HashMap) map2.get(strMoudleName);
+            if (map.containsKey(key)) {
+                //获取旧的值
+                strEndDate = (String) map.get(key);
+
+            } else {
+                System.out.println("你输入的key值不存在");
+            }
+        } else {
+            System.out.println("你输入的模块名不存在");
+        }
+        return strEndDate;
+    }
+
+    //遍历map  将内存中的数据 添加到文件夹
+    public void save() throws FileNotFoundException {
+        Iterator it2 = map2.keySet().iterator();
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(address),"GB2312"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        // FileOutputStream out = new FileOutputStream("D://test.txt"),"utf-8";
+       // PrintStream p = new PrintStream(out);
+        //对map2的操作
+        while (it2.hasNext()) {
+            //找到map2的key即模组的name
+            String key2 = it2.next().toString();
+            try {
+                writer.write("[" + key2 + "]"+"\r\n");
+               // writer.write("\n" );
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            //根据map2的key取出value——对象  savemap1 == map1
+            //取出的value就是map1
+            LinkedHashMap savemap1 = (LinkedHashMap) map2.get(key2);
+            //TreeMap savemap1 = (TreeMap) map2.get(key2);
+            //HashMap savemap1 = (HashMap) map2.get(key2);
+            Iterator it1 = savemap1.keySet().iterator();
+
+            //对map1的操作
+            while (it1.hasNext() ) {
+                //取出map1的key
+                String key1 = it1.next().toString();
+                //根据map1的key找到所对应value
+                String value1 = (String) savemap1.get(key1);
+                if(key1.contains("#")){
+                   // p.println(key1);
+                    try {
+                        //写入内容的同时写入换行
+                        writer.write(key1+"\r\n");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }else {
+                    try {
+                        writer.write(key1 + "=" + value1+"\r\n");
+                        writer.write("\r\n");
+                       // writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+//                    p.println(key1 + "=" + value1);
+//                    p.println();
+                }
+            }
+        }
+        try {
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
