@@ -1,0 +1,57 @@
+package com.second.File;
+
+
+import java.io.*;
+
+
+/**
+ * Created by hasee on 2016/11/15.
+ */
+public class WriteFile {
+    private BufferedWriter bw = null;
+
+    public int openWrite(String address, String strCodeFormat) {
+        if (strCodeFormat == null || address == null || address.length() == 0 || strCodeFormat.length() == 0) {
+            //错误代码 101 输入的信息为空
+            return 101;
+        }
+        try {
+            bw = new BufferedWriter(
+                    new OutputStreamWriter(
+                            new FileOutputStream(address), strCodeFormat));
+            return 1;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return 204;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return 201;
+        }
+    }
+
+    public int save(String strLine) {
+        if (bw == null) {
+            return 301;
+        }
+        try {
+            bw.write(strLine);
+            return 1;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+   public int closeWrite() {
+        if (bw == null) {
+            return 301;
+        }
+        try {
+            bw.close();
+            return 1;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 301;
+        }
+    }
+}
