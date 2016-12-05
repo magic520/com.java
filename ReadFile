@@ -1,0 +1,62 @@
+package com.second.File;
+
+import java.io.*;
+
+/**
+ * Created by hasee on 2016/11/16.
+ */
+public class ReadFile {
+
+    private BufferedReader br = null;
+
+    public int openFile(String strAddress, String codeFormat) {
+        if (strAddress == null || codeFormat == null || strAddress.length() == 0 || codeFormat.length() == 0) {
+            //错误代码 101 输入的信息是否为空
+            return 101;
+        }
+        //判断文件夹是否为空
+        File file = new File(strAddress);
+        if(file.exists() && file.length()==0) {
+            return 102;
+        }
+        try {
+            br = new BufferedReader(
+                    new InputStreamReader(
+                            new FileInputStream(strAddress), codeFormat));
+            return 1;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return 204;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return 201;
+        }
+    }
+
+    public String readLine() {
+        if (br == null) {
+            return null;
+        }
+        try {
+            String strReadLine = br.readLine();
+            return strReadLine;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    public int closeRead() {
+        if (br == null) {
+            return 301;
+        }
+        try {
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return 1;
+    }
+}
+
